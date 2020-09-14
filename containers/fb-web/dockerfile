@@ -1,0 +1,29 @@
+# Build the application to run in an alpine container
+FROM alpine as build
+ARG sourceDir
+
+# Cannot use libdev-dev because it's disabled
+# https://github.com/couchbaselabs/couchbase-rs/blob/991b6d602f63a4db6ee153ed0d1b7f69142c6a09/couchbase-sys/build.rs#L20
+RUN apk update \
+    && apk add --no-cache bash libevent-dev make cmake clang-dev g++ openssl-dev nodejs npm libssl1.1 cargo
+
+COPY $sourceDir /src
+
+WORKDIR /src/client
+RUN npm install --no-optional
+
+WORKDIR /src
+RUN bash ./fb.sh build -m release -s -c
+
+# Prepare the actual container
+FROM alpine
+
+RUN apk update \
+    && apk add --no-cache libevent libstdc++ openssl ca-certificates ffmpeg
+
+COPY ./util/wait-for.sh /fb-web/
+COPY --from=build /src/client/build/ /fb-web/client/
+COPY --from=build /src/server/n1ql/ /fb-web/n1ql/
+COPY --from=build /src/server/target/release/fb-web-server /fb-web/
+
+WORKDIR /fb-web

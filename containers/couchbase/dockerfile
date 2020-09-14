@@ -1,0 +1,2 @@
+FROM couchbase:community-6.5.1
+RUN apt-get update && apt-get install -y jq

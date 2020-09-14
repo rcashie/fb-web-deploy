@@ -1,0 +1,7 @@
+containers/build/
+containers/deploy/
+containers/fb-web/*.config.json
+containers/haproxy/*.pem
+infrastructure/.terraform
+infrastructure/*.tfstate
+infrastructure/*.tfstate.backup

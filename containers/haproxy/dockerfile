@@ -1,0 +1,4 @@
+FROM haproxy:alpine
+ENTRYPOINT
+COPY ./util/wait-for.sh /
+WORKDIR /

@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  fbweb:
+    image: "${registry}/fb-web:${mode}-${target}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+      placement:
+        constraints:
+        - "node.labels.generic==true"
+    volumes:
+      - "${fbweb__volume}:/store"
+    networks:
+      - fb_overlay
+    command: ["./wait-for.sh", "couchbase:8091", "--", "./fb-web-server", "-c", "/run/secrets/config.json"]
+    secrets:
+      - source: fb-web__config-file
+        target: /run/secrets/config.json
+
+  haproxy:
+    image: "${registry}/haproxy:${mode}-${target}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+      placement:
+        constraints:
+        - "node.labels.generic==true"
+    depends_on:
+      - fbweb
+    networks:
+      - fb_overlay
+    ports:
+      - "443:443"
+      - "80:80"
+    command: ["./wait-for.sh", "fbweb:35624", "--", "haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg", "-db"]
+    secrets:
+      - source: haproxy__cert-file
+        target: /config/ssl-cert.pem
+      - source: haproxy__config-file
+        target: /usr/local/etc/haproxy/haproxy.cfg
+
+secrets:
+  fb-web__config-file:
+    file: "./fb-web/${mode}.config.json"
+  haproxy__config-file:
+    file: "./haproxy/haproxy.cfg"
+  haproxy__cert-file:
+    file: "./haproxy/ssl-cert.pem"
+
+networks:
+  fb_overlay:
+    external: true

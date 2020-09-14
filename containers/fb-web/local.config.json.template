@@ -1,0 +1,30 @@
+{
+    "http-service": {
+        "port": "35624"
+    },
+    "couchbase": {
+        "cluster": "couchbase",
+        "user": "<user>",
+        "password": "<user>"
+    },
+    "file-service": {
+        "uploads-dir": "/store/uploads",
+        "content-dir": "./client",
+        "not-found-file": "src/404.html"
+    },
+    "upload-service": {
+        "publish-dir": "/store/uploads",
+        "video-tmp-dir": "/store/video-tmp",
+        "video-size-limit": 1000000
+    },
+    "auth-service": {
+        "twitter-oauth": {
+            "consumer-key": "<consumer key>",
+            "consumer-secret": "<consumer secret>",
+            "callback-url": "https://localhost/auth/callback"
+        },
+        "jwt": {
+            "signing-key": "<signing key>"
+        }
+    }
+}

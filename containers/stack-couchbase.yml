@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  couchbase:
+    image: "${registry}/couchbase:${mode}-${target}"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+        - "node.labels.couchbase==true"
+    volumes:
+      - "${couchbase__volume}:/opt/couchbase/var"
+    networks:
+    - fb_overlay
+
+networks:
+  fb_overlay:
+    external: true
