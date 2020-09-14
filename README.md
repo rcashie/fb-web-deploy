@@ -43,6 +43,8 @@ Tools and configuration for deploying the [framebastard](https://github.com/rcas
 
 The production environment consists of a set of virtual machines in [Vultr](https://www.vultr.com/) running the Docker engine. We use `docker-machine` to deploy containers to them.
 
+**Always test deployments [locally](#building-and-deploying-locally) first before deploying to production**.
+
 ### Configure docker-machine
 1. Install [docker-machine](https://docs.docker.com/machine/install-machine/)
 
