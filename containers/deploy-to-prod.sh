@@ -2,7 +2,7 @@
 source ./common.sh
 
 # Change the target at every release
-target=v0.4.1-alpha
+target=v0.4.2-alpha
 swarm_manager=swarm-node-generic-a
 registry=registry.gitlab.com/rcashie/fbastard
 

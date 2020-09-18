@@ -29,14 +29,14 @@ Tools and configuration for deploying the [framebastard](https://github.com/rcas
 
 2. Generate a self signed SSL certificate and place it in the [haproxy](./containers/haproxy) directory as `ssl-cert.pem`.
 
-3. From the [containers](./containers) directory run the [deploy](./containers/deploy.sh) bash script. See the source script for default arguments you can override. You must specify at least one stack to deploy:
+3. From the [containers](./containers) directory run the [deploy](./containers/deploy.sh) bash script. See the source script for default arguments you can override. You must specify at least one stack to deploy. To deploy the `app` stack the `couchbase` stack must already be running and configured (see step 4):
     ```sh
     ./deploy.sh [--app] [--couchbase]
     ```
 
-4. For a **new couchbase stack** deployment use the [setup_docker.sh](https://github.com/rcashie/fb-web/blob/master/couchbase/setup_docker.sh) bash script from the main fb-web repo:
+4. To configure a new or update an existing couchbase container use the [setup_docker.sh](https://github.com/rcashie/fb-web/blob/master/couchbase/setup_docker.sh) bash script from the main fb-web repo:
     ```sh
-    ./setup_docker.sh --container <container id/name> --user <username> --password <password>
+    ./setup_docker.sh --container <container id/name> --user <username> --password <password> --create-fts-indices --create-bkt-indices
     ```
 
 ## Building and deploying to production
@@ -60,9 +60,15 @@ The production environment consists of a set of virtual machines in [Vultr](http
 
 3. Edit the [deploy-to-prod.sh](./containers/deploy-to-prod.sh) bash script and update the target variable to the latest release tag of the [fb-web](https://github.com/rcashie/fb-web) project in Github. Make sure to check in this change after deploying.
 
-4. From the [containers](./containers) directory run the [deploy-to-prod](./containers/deploy-to-prod.sh) bash script.
+4. From the [containers](./containers) directory run the [deploy-to-prod](./containers/deploy-to-prod.sh) bash script. You must specify at least one stack to deploy. To deploy the `app` stack the `couchbase` stack must already be running and configured (see step 5):
     ```sh
     ./deploy-to-prod.sh [--app] [--couchbase]
+    ```
+
+5. To configure a new or update an existing couchbase container use the [setup_docker.sh](https://github.com/rcashie/fb-web/blob/master/couchbase/setup_docker.sh) bash script from the main fb-web repo:
+    ```sh
+    eval $(docker-machine env swarm-node-couchbase-x)
+    ./setup_docker.sh --container <container id/name> --user <username> --password <password> --create-fts-indices --create-bkt-indices
     ```
 
 ## Deploying infrastructure in production
