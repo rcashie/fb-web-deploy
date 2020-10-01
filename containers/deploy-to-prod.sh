@@ -3,7 +3,7 @@ source ./common.sh
 
 # Change the target at every release
 target=v0.4.2-alpha
-swarm_manager=swarm-node-generic-a
+swarm_manager=swarm-node-a
 registry=registry.gitlab.com/rcashie/fbastard
 
 # Parse the command line arguments
@@ -17,7 +17,7 @@ while [ $# -gt 0 ]; do
 done
 
 dockerMachineExec() {
-    ( eval "$(docker-machine env $1)"  && eval "$2" )
+    ( eval "$(docker-machine env $1)" && eval "$2" )
 }
 
 dockerMachineExec -u \
@@ -39,7 +39,7 @@ if [ -n "$deployCouchbase" ]; then
     dockerMachineExec -u "docker push \"$registry/couchbase:prod-$target\""
     checkExitCode "Failed to push the couchbase image to the registry"
 
-    export couchbase__volume="/mnt/blockstorage"
+    export couchbase__volume="/mnt/blockstorage/couchbase"
     dockerMachineExec "$swarm_manager" \
         "./deploy.sh --mode prod \
             --registry $registry \
@@ -56,7 +56,7 @@ if [ -n "$deployApp" ]; then
     dockerMachineExec -u "docker push \"$registry/haproxy:prod-$target\""
     checkExitCode "Failed to push the haproxy image to the registry"
 
-    export fbweb__volume="/mnt/blockstorage"
+    export fbweb__volume="/mnt/blockstorage/fbweb"
     dockerMachineExec "$swarm_manager" \
         "./deploy.sh --mode prod \
             --registry $registry \

@@ -17,37 +17,20 @@ data "vultr_os" "target" {
     }
 }
 
-data "vultr_plan" "generic" {
+data "vultr_plan" "swarm_node" {
     filter {
         name = "vcpu_count"
-        values = [1]
+        values = [2]
     }
 
     filter {
         name = "ram"
-        values = [1024]
+        values = [4096]
     }
 
     filter {
         name = "disk"
-        values = [25]
-    }
-}
-
-data "vultr_plan" "couchbase" {
-    filter {
-        name = "vcpu_count"
-        values = [1]
-    }
-
-    filter {
-        name = "ram"
-        values = [2048]
-    }
-
-    filter {
-        name = "disk"
-        values = [55]
+        values = [80]
     }
 }
 
@@ -100,26 +83,13 @@ resource "vultr_firewall_rule" "http" {
 }
 
 # Servers
-resource "vultr_server" "swarm_node_generic_a" {
-    plan_id = data.vultr_plan.generic.id
+resource "vultr_server" "swarm_node_a" {
+    plan_id = data.vultr_plan.swarm_node.id
     region_id = data.vultr_region.target.id
     os_id = data.vultr_os.target.id
     tag = "swarm manager"
-    label = "swam-node-generic-a"
-    hostname = "swarm-node-generic-a"
-    enable_private_network = true
-    network_ids = [vultr_network.swarm_nodes.id]
-    firewall_group_id = vultr_firewall_group.swarm_nodes.id
-    ssh_key_ids = [data.vultr_ssh_key.deploy.id]
-}
-
-resource "vultr_server" "swarm_node_couchbase_a" {
-    plan_id = data.vultr_plan.couchbase.id
-    region_id = data.vultr_region.target.id
-    os_id = data.vultr_os.target.id
-    tag = "couchbase node, entry node"
-    label = "swam-node-couchbase-a"
-    hostname = "swarm-node-couchbase-a"
+    label = "swam-node-a"
+    hostname = "swarm-node-a"
     enable_private_network = true
     network_ids = [vultr_network.swarm_nodes.id]
     firewall_group_id = vultr_firewall_group.swarm_nodes.id
@@ -127,23 +97,13 @@ resource "vultr_server" "swarm_node_couchbase_a" {
 }
 
 # Block storage
-resource "vultr_block_storage" "swarm_node_generic_a" {
+resource "vultr_block_storage" "swarm_node_a" {
     size_gb = 10
     region_id = data.vultr_region.target.id
-    attached_id = vultr_server.swarm_node_generic_a.id
-}
-
-resource "vultr_block_storage" "swarm_node_couchbase_a" {
-    size_gb = 10
-    region_id = data.vultr_region.target.id
-    attached_id = vultr_server.swarm_node_couchbase_a.id
+    attached_id = vultr_server.swarm_node_a.id
 }
 
 # Output variables
-output "swarm_node_generic_a" {
-  value = vultr_server.swarm_node_generic_a.main_ip
-}
-
-output "swarm_node_couchbase_a" {
-  value = vultr_server.swarm_node_couchbase_a.main_ip
+output "swarm_node_a" {
+  value = vultr_server.swarm_node_a.main_ip
 }

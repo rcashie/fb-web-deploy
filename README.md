@@ -41,7 +41,7 @@ Tools and configuration for deploying the [framebastard](https://github.com/rcas
 
 ## Building and deploying to production
 
-The production environment consists of a set of virtual machines in [Vultr](https://www.vultr.com/) running the Docker engine. We use `docker-machine` to deploy containers to them.
+The production environment consists of one or more virtual machines in [Vultr](https://www.vultr.com/) that make up a Docker swarm cluster. We use `docker-machine` to deploy containers to them. Both Swarm and docker-machine are not actively being worked on but are still used here. Other orchestration solutions are overkill for this project.
 
 **Always test deployments [locally](#building-and-deploying-locally) first before deploying to production**.
 
@@ -76,11 +76,9 @@ This repository uses Terraform to provision resources in Vultr. Make sure you ha
 
 ### Configuring a new Docker swarm node in Vultr
 
-There are two types of Docker swarm nodes within a framebastard deployment: `generic` nodes for running non-couchbase containers and `couchbase` nodes for running Couchbase containers. Couchbase nodes typically have more memory and processing capacity. A node is `tagged` with the type it's identified as.
-
 1. Place the shared `terraform.tfstate` file into the [infrastructure](./infrastructure) folder. If you are deploying to an entirely different environment a new file will be generated.
 
-2. Edit the [main.tf](./infrastructure/main.tf) Terraform file and add a new `vultr_server` resource: Copy an existing `swarm_node_generic_x` or `swarm_node_couchbase_x` definition and update the `name`, `tag`, `label` and `host` parameters accordingly.
+2. Edit the [main.tf](./infrastructure/main.tf) Terraform file and add a new `vultr_server` resource: Copy an existing `swarm_node_x` definition and update the `name`, `tag`, `label` and `host` parameters accordingly.
 
 3. In the same [main.tf](./infrastructure/main.tf) Terraform file add a new `vultr_block_storage` resource: Copy an existing definition and update the `name` and `attached_id` parameters accordingly.
 
@@ -93,71 +91,45 @@ There are two types of Docker swarm nodes within a framebastard deployment: `gen
     terraform apply
     ```
 
-5. Register the new virtual machine with docker-machine:
+5. From the [infrastructure](./infrastructure) folder execute the following:
     ```sh
-    docker-machine create --driver generic --generic-ip-address=<virtual machine ip address> --generic-ssh-key <ssh key> <machine-alias>
-    ```
+    # 1. Copy the 'setup_node' bash script onto the virtual machine
+    scp -i <ssh key> ./setup_node.sh root@<VM IP address>:/setup_node.sh
 
-6. `ssh` into the machine:
-    ```sh
-    docker-machine ssh <machine-alias>
-    ```
+    # 2. Log into the virtual machine
+    ssh -i <ssh key> root@<VM IP Address>
 
-7. Perform the following steps while on the machine (TODO: Make this into a script):
-    ```sh
-    # 1. Install containerd (required by Docker):
-    yum install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
+    # 3. Execute the script
+    /setup_node.sh --privateIp <Private IP address> [--privateNi <private network interface>] [--publicFacing]
 
-    # 2. Open the ssh configuration file:
-    sudo vi /etc/ssh/sshd_config
-
-    # 3. ~~~Change the parameter PasswordAuthentication to no
-
-    # 4. Restart the ssh service:
-    sudo service sshd restart
-
-    # 5. Follow the instructions here to setup the private network:
-    # https://www.vultr.com/docs/how-to-configure-a-private-network-on-centos/
-
-    # 6. Assign the private nic (ens7) to the internal firewall zone:
-    firewall-cmd --zone=internal --change-interface=ens7 --permanent
-
-    # 7. Configure the firewall:
-    firewall-cmd --zone=public --permanent --add-masquerade             # Allows source NAT
-    firewall-cmd --zone=internal --permanent --add-service=docker-swarm # Allows Docker swarm communication
-    firewall-cmd --zone=public --permanent --add-port=2376/tcp          # Allows client to remote daemon coms over tls
-    firewall-cmd --reload
-
-    # 8. (Only for public facing nodes) Configure the firewall or public facing nodes:
-    firewall-cmd --zone=public --permanent --add-service=http
-    firewall-cmd --zone=public --permanent --add-service=https
-    firewall-cmd --reload
-
-    # 9. Follow the instructions to mount the block storage:
+    # 4. Follow the instructions to mount the block storage:
     # https://www.vultr.com/docs/block-storage
+
+    # 5. Reboot
+    reboot
     ```
 
-8. Install Docker on the new virtual machine:
+6. Register the new virtual machine with docker-machine:
     ```sh
-    docker-machine provision <machine-alias>
+    docker-machine create --driver generic --generic-ip-address=<VM IP address> --generic-ssh-key <ssh key> <machine alias>
     ```
 
-9. Add the machine as a node to the swarm:
+7. Add the machine as a node to the swarm:
     ```sh
     # 1. Switch context to the manager node
-    eval $(docker-machine env swarm-node-generic-a)
+    eval $(docker-machine env swarm-node-a)
 
     # 2. Get the command to run
     docker swarm join-token worker
 
     # 3. Switch context to the new virtual machine
-    eval $(docker-machine env <machine-alias>)
+    eval $(docker-machine env <machine alias>)
 
-    # 4. Execute the command retrieved from step 2
+    # 4. Execute the command retrieved in step 2
     ```
 
-10. Tag the new node as `generic` or `couchbase` using the manager node:
+8. Tag the new node as `generic` or `couchbase` using the manager node:
     ```sh
-    eval $(docker-machine env swarm-node-generic-a)
-    docker node update --label-add generic|couchbase=true <machine-alias>
+    eval $(docker-machine env swarm-node-a)
+    docker node update --label-add generic|couchbase=true <machine alias>
     ```
