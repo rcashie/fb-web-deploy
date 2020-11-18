@@ -2,7 +2,7 @@
 source ./common.sh
 
 # Change the target at every release
-target=v0.4.4-alpha
+target=v0.4.5-alpha
 swarm_manager=swarm-node-a
 registry=registry.gitlab.com/rcashie/fbastard
 
@@ -24,7 +24,7 @@ dockerMachineExec -u \
     "./build.sh --mode prod \
         --registry $registry \
         --target $target \
-        --googleTagId GTM-T4DGPD \
+        --googleTagId GTM-T4DGPDD \
     "
 checkExitCode
 
