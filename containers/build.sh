@@ -70,4 +70,5 @@ docker build \
     --tag "$registry/couchbase:$mode-$target" \
     --file "./couchbase/dockerfile" \
     .
+
 checkExitCode "Failed to build the couchbase image"

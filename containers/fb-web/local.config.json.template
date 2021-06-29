@@ -9,8 +9,8 @@
     },
     "file-service": {
         "uploads-dir": "/store/uploads",
-        "content-dir": "./client",
-        "not-found-file": "src/404.html"
+        "content-dir": "./client/static",
+        "not-found-file": "./client/static/404.html"
     },
     "upload-service": {
         "publish-dir": "/store/uploads",
