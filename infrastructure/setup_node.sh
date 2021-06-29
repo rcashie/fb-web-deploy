@@ -31,7 +31,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$privateIp" ]; then
-    printErr "Specify an ip address for the private network"
+    printErr "Specify an ip address of this host for the private network"
     exit 1
 fi
 
